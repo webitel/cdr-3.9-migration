@@ -6,7 +6,7 @@ WORKDIR /go/src/github.com/webitel/cdr-3.9-migration/src/
 
 RUN GOOS=linux go get -d ./...
 RUN GOOS=linux go install
-RUN CGO_ENABLED=0 GOOS=linux go build -a -o cdr .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -o cdr-3.9-migration .
 
 FROM scratch
 LABEL maintainer="Vitaly Kovalyshyn"
@@ -19,6 +19,6 @@ WORKDIR /
 COPY --from=0 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=0 /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=0 /go/src/github.com/webitel/cdr-3.9-migration/src/cdr-3.9-migration .
-COPY src/conf /conf
+COPY src/config.json .
 
 CMD ["./cdr-3.9-migration"]

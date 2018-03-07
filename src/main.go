@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/webitel/cdr-3.9-migration/src/elastic"
 	"github.com/webitel/cdr-3.9-migration/src/mongo"
@@ -14,11 +15,12 @@ import (
 )
 
 type Config struct {
-	ElasticHost string `json:"elastic_host,omitempty"`
-	RabbitHost  string `json:"rabbitmq_host,omitempty"`
-	MongoHost   string `json:"mongo_host,omitempty"`
-	Cdr         bool   `json:"cdr,omitempty"`
-	Recordings  bool   `json:"recordings,omitempty"`
+	ElasticHost      string `json:"elastic_host,omitempty"`
+	ElasticBulkCount int    `json:"elastic_bulk_count,omitempty"`
+	RabbitHost       string `json:"rabbitmq_host,omitempty"`
+	MongoHost        string `json:"mongo_host,omitempty"`
+	Cdr              bool   `json:"cdr,omitempty"`
+	Recordings       bool   `json:"recordings,omitempty"`
 }
 
 func main() {
@@ -37,14 +39,12 @@ func main() {
 	if config.Cdr {
 		rabbit.Connect(config.RabbitHost)
 		defer rabbit.Connection.Close()
-		go mongo.GetFiles()
+		mongo.GetFiles()
 	}
 	if config.Recordings {
 		elastic.Connect(config.ElasticHost)
-		go mongo.GetRecordings()
+		mongo.GetRecordings(config.ElasticBulkCount)
 	}
-	f := make(chan bool, 2)
-	<-f
 }
 
 func (conf *Config) readFromFile() error {
@@ -60,9 +60,14 @@ func (conf *Config) readFromFile() error {
 	err = json.Unmarshal(file, conf)
 	return err
 }
+
 func (conf *Config) readFromEnviroment() error {
 	if value := os.Getenv("elastic_host"); value != "" {
 		conf.ElasticHost = value
+	}
+	if value := os.Getenv("elastic_bulk_count"); value != "" {
+		i, _ := strconv.Atoi(value)
+		conf.ElasticBulkCount = i
 	}
 	if value := os.Getenv("rabbitmq_host"); value != "" {
 		conf.RabbitHost = value

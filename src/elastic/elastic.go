@@ -54,7 +54,7 @@ func BulkInsert(records []Record) {
 	}
 	res, err := bulkRequest.Do(Ctx)
 	if err != nil {
-		log.Printf("Elastic ERROR")
+		log.Printf("ERROR [Elastic]: %s", err)
 		return
 	}
 	if res.Errors {

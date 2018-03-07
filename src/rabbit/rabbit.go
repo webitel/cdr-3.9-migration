@@ -50,5 +50,7 @@ func Publish(body []byte) {
 			ContentType:  "text/plain",
 			Body:         body,
 		})
-	failOnError(err, "Failed to publish a message")
+	if err != nil {
+		log.Printf("ERROR [Rabbit]: %s", err)
+	}
 }

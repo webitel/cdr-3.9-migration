@@ -44,7 +44,7 @@ func GetFiles() {
 	log.Println("Finish cdr")
 }
 
-func GetRecordings() {
+func GetRecordings(bulk int) {
 	find := Recordings.Find(bson.M{}).Sort("_id")
 	items := find.Iter()
 	var (
@@ -64,12 +64,13 @@ func GetRecordings() {
 				CreatedOn:   item["createdOn"].(time.Time),
 				Size:        item["size"].(int),
 			})
-		if len(records) == 100 {
-			go elastic.BulkInsert(records)
+		if len(records) == bulk {
+			elastic.BulkInsert(records)
 			records = nil
 		}
 	}
 	if len(records) > 0 {
-		go elastic.BulkInsert(records)
+		elastic.BulkInsert(records)
 	}
+	log.Println("Finish recordings")
 }

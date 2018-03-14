@@ -54,15 +54,15 @@ func GetRecordings(bulk int) {
 	for items.Next(&item) {
 		records = append(records,
 			elastic.Record{
-				Uuid:        item["uuid"].(string),
-				Name:        item["name"].(string),
-				Path:        item["path"].(string),
-				Domain:      item["domain"].(string),
-				Private:     item["private"].(bool),
-				ContentType: item["content-type"].(string),
-				Type:        item["type"].(int),
-				CreatedOn:   item["createdOn"].(time.Time),
-				Size:        item["size"].(int),
+				Uuid:        getString(item["uuid"]),
+				Name:        getString(item["name"]),
+				Path:        getString(item["path"]),
+				Domain:      getString(item["domain"]),
+				Private:     getBoolean(item["private"]),
+				ContentType: getString(item["content-type"]),
+				Type:        getInteger(item["type"]),
+				CreatedOn:   getTime(item["createdOn"]),
+				Size:        getInteger(item["size"]),
 			})
 		if len(records) == bulk {
 			elastic.BulkInsert(records)
@@ -73,4 +73,24 @@ func GetRecordings(bulk int) {
 		elastic.BulkInsert(records)
 	}
 	log.Println("Finish recordings")
+}
+
+func getString(i interface{}) (s string) {
+	s, _ = i.(string)
+	return
+}
+
+func getBoolean(i interface{}) (s bool) {
+	s, _ = i.(bool)
+	return
+}
+
+func getInteger(i interface{}) (s int) {
+	s, _ = i.(int)
+	return
+}
+
+func getTime(i interface{}) (s time.Time) {
+	s, _ = i.(time.Time)
+	return
 }

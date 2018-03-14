@@ -21,7 +21,7 @@ type Record struct {
 	Name        string    `json:"name,omitempty"`
 	Path        string    `json:"path,omitempty"`
 	Domain      string    `json:"domain,omitempty"`
-	Private     bool      `json:"private,omitempty"`
+	Private     bool      `json:"private"`
 	ContentType string    `json:"content-type,omitempty"`
 	Type        int       `json:"type,omitempty"`
 	CreatedOn   time.Time `json:"createdOn,omitempty"`
@@ -49,7 +49,7 @@ func BulkInsert(records []Record) {
 		if item.Domain != "" && !strings.ContainsAny(item.Domain, ", & * & \\ & < & | & > & / & ?") {
 			tmpDomain = "-" + item.Domain
 		}
-		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("cdr-a-%v%v", time.Now().UTC().Year(), tmpDomain)).Type("cdr").RetryOnConflict(5).Id(item.Uuid).DocAsUpsert(true).Doc(map[string]interface{}{"recordings": item})
+		req := elastic.NewBulkUpdateRequest().Index(fmt.Sprintf("cdr-a-%v%v", time.Now().UTC().Year(), tmpDomain)).Type("cdr").RetryOnConflict(5).Id(item.Uuid).Upsert(map[string]interface{}{"recordings": make([]bool, 0)}).ScriptedUpsert(true).Script(elastic.NewScriptInline("if(ctx._source.containsKey(\"recordings\")){ctx._source.recordings.add(params.v);}else{ctx._source.recordings = new ArrayList(); ctx._source.recordings.add(params.v);}").Lang("painless").Param("v", item))
 		bulkRequest = bulkRequest.Add(req)
 	}
 	res, err := bulkRequest.Do(Ctx)

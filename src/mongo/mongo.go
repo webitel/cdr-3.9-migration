@@ -50,7 +50,7 @@ func getStrFromPtr(s *string) string {
 }
 
 func GetFiles(filter *string) {
-	find := Collection.Find(getBSONFilter(filter)).Sort("_id")
+	find := Collection.Find(getBSONFilter(filter)).Sort("_id").SetMaxTime(time.Minute * 3)
 	count, err := find.Count()
 	if err != nil {
 		panic(err.Error())
@@ -77,6 +77,11 @@ func GetFiles(filter *string) {
 		fmt.Printf("Rabbit: %v\n", i)
 		i++
 	}
+
+	if err = items.Close(); err != nil {
+		panic(err.Error())
+	}
+
 	log.Println("Finish cdr")
 }
 

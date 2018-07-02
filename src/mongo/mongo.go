@@ -50,16 +50,16 @@ func getStrFromPtr(s *string) string {
 }
 
 func GetFiles(filter *string) {
-	find := Collection.Find(getBSONFilter(filter)).Sort("_id").SetMaxTime(time.Minute * 3)
-	count, err := find.Count()
-	if err != nil {
-		panic(err.Error())
+	var pipeline []bson.M
+	var err error
+
+	if filter != nil {
+		pipeline = []bson.M{
+			{"$match": getBSONFilter(filter)},
+		}
 	}
 
-	fmt.Printf("Found %d migrate records by filter: %s\n", count, getStrFromPtr(filter))
-	if count == 0 {
-		return
-	}
+	find := Collection.Pipe(pipeline).AllowDiskUse()
 
 	items := find.Iter()
 	var item interface{}
@@ -72,7 +72,6 @@ func GetFiles(filter *string) {
 			fmt.Printf("Error marshal: %s\n", err.Error())
 			continue
 		}
-
 		rabbit.Publish(event)
 		fmt.Printf("Rabbit: %v\n", i)
 		i++

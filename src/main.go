@@ -15,12 +15,13 @@ import (
 )
 
 type Config struct {
-	ElasticHost      string `json:"elastic_host,omitempty"`
-	ElasticBulkCount int    `json:"elastic_bulk_count,omitempty"`
-	RabbitHost       string `json:"rabbitmq_host,omitempty"`
-	MongoHost        string `json:"mongo_host,omitempty"`
-	Cdr              bool   `json:"cdr,omitempty"`
-	Recordings       bool   `json:"recordings,omitempty"`
+	ElasticHost      string  `json:"elastic_host,omitempty"`
+	ElasticBulkCount int     `json:"elastic_bulk_count,omitempty"`
+	RabbitHost       string  `json:"rabbitmq_host,omitempty"`
+	MongoHost        string  `json:"mongo_host,omitempty"`
+	Cdr              bool    `json:"cdr,omitempty"`
+	CdrFilter        *string `json:"cdr_filter,omitempty"`
+	Recordings       bool    `json:"recordings,omitempty"`
 }
 
 func main() {
@@ -39,7 +40,7 @@ func main() {
 	if config.Cdr {
 		rabbit.Connect(config.RabbitHost)
 		defer rabbit.Connection.Close()
-		mongo.GetFiles()
+		mongo.GetFiles(config.CdrFilter)
 	}
 	if config.Recordings {
 		elastic.Connect(config.ElasticHost)
@@ -82,6 +83,11 @@ func (conf *Config) readFromEnviroment() error {
 			conf.Cdr = false
 		}
 	}
+
+	if value := os.Getenv("cdr_filter"); value != "" && conf.Cdr {
+		conf.CdrFilter = &value
+	}
+
 	if value := os.Getenv("recordings"); value != "" {
 		if value == "1" || value == "true" {
 			conf.Recordings = true

@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"fmt"
 	"github.com/webitel/cdr-3.9-migration/src/elastic"
 	"github.com/webitel/cdr-3.9-migration/src/rabbit"
 	"gopkg.in/mgo.v2"
@@ -29,8 +30,37 @@ func Connect(host string) {
 	Recordings = Session.DB("webitel").C("cdrFile")
 }
 
-func GetFiles() {
-	find := Collection.Find(bson.M{}).Sort("_id")
+func getBSONFilter(in *string) bson.M {
+	if in == nil {
+		return bson.M{}
+	}
+	var result bson.M
+	if err := json.Unmarshal([]byte(*in), &result); err != nil {
+		panic(err.Error())
+	}
+	return result
+}
+
+func getStrFromPtr(s *string) string {
+	if s == nil {
+		return ""
+	}
+
+	return *s
+}
+
+func GetFiles(filter *string) {
+	find := Collection.Find(getBSONFilter(filter)).Sort("_id")
+	count, err := find.Count()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	fmt.Printf("Found %d migrate records by filter: %s\n", count, getStrFromPtr(filter))
+	if count == 0 {
+		return
+	}
+
 	items := find.Iter()
 	var item interface{}
 	var event []byte

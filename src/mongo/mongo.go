@@ -65,10 +65,16 @@ func GetFiles(filter *string) {
 	var item interface{}
 	var event []byte
 	var i int = 1
+
 	for items.Next(&item) {
-		event, _ = json.Marshal(item)
+		event, err = json.Marshal(item)
+		if err != nil {
+			fmt.Printf("Error marshal: %s\n", err.Error())
+			continue
+		}
+
 		rabbit.Publish(event)
-		log.Printf("Rabbit: %v", i)
+		fmt.Printf("Rabbit: %v\n", i)
 		i++
 	}
 	log.Println("Finish cdr")

@@ -25,6 +25,7 @@ func Connect(host string) {
 		panic(err)
 	}
 	Session.SetMode(mgo.Monotonic, true)
+	Session.SetSocketTimeout(time.Minute * 5)
 
 	Collection = Session.DB("webitel").C("cdr")
 	Recordings = Session.DB("webitel").C("cdrFile")
@@ -50,6 +51,7 @@ func getStrFromPtr(s *string) string {
 }
 
 func GetFiles(filter *string) {
+	defer timeTrack(time.Now(), "CDR publish")
 	var pipeline []bson.M
 	var err error
 
@@ -59,12 +61,10 @@ func GetFiles(filter *string) {
 		}
 	}
 
-	find := Collection.Pipe(pipeline).AllowDiskUse()
-
-	items := find.Iter()
+	items := Collection.Pipe(pipeline).AllowDiskUse().Iter()
 	var item interface{}
 	var event []byte
-	var i int = 1
+	var i = 0
 
 	for items.Next(&item) {
 		event, err = json.Marshal(item)
@@ -72,16 +72,20 @@ func GetFiles(filter *string) {
 			fmt.Printf("Error marshal: %s\n", err.Error())
 			continue
 		}
+
 		rabbit.Publish(event)
-		fmt.Printf("Rabbit: %v\n", i)
 		i++
+
+		if i%1000 == 0 {
+			fmt.Printf("Publish messages: %v\n", i)
+		}
 	}
 
 	if err = items.Close(); err != nil {
 		panic(err.Error())
 	}
 
-	log.Println("Finish cdr")
+	log.Println("CDR publish count message ", i)
 }
 
 func GetRecordings(bulk int) {
@@ -133,4 +137,9 @@ func getInteger(i interface{}) (s int) {
 func getTime(i interface{}) (s time.Time) {
 	s, _ = i.(time.Time)
 	return
+}
+
+func timeTrack(start time.Time, name string) {
+	elapsed := time.Since(start)
+	log.Printf("%s took %s", name, elapsed)
 }

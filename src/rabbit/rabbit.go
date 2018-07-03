@@ -51,6 +51,7 @@ func Publish(body []byte) {
 			Body:         body,
 		})
 	if err != nil {
+		panic(err)
 		log.Printf("ERROR [Rabbit]: %s", err)
 	}
 }

@@ -121,17 +121,11 @@ func (conf *Config) readFromEnviroment() error {
 	}
 
 	if value := os.Getenv("pg_to_elastic_leg_a_start_id"); value != "" {
-		id, err := strconv.Atoi(value)
-		if err != nil {
-			panic(err.Error())
-		}
+		id, _ := strconv.Atoi(value)
 		conf.PgToElasticLegAStartId = id
 	}
 	if value := os.Getenv("pg_to_elastic_leg_b_start_id"); value != "" {
-		id, err := strconv.Atoi(value)
-		if err != nil {
-			panic(err.Error())
-		}
+		id, _ := strconv.Atoi(value)
 		conf.PgToElasticLegBStartId = id
 	}
 

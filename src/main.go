@@ -11,20 +11,24 @@ import (
 
 	"github.com/webitel/cdr-3.9-migration/src/elastic"
 	"github.com/webitel/cdr-3.9-migration/src/mongo"
+	"github.com/webitel/cdr-3.9-migration/src/pg_to_elastic"
 	"github.com/webitel/cdr-3.9-migration/src/rabbit"
 )
 
 type Config struct {
-	ElasticHost      string  `json:"elastic_host,omitempty"`
-	ElasticBulkCount int     `json:"elastic_bulk_count,omitempty"`
-	RabbitHost       string  `json:"rabbitmq_host,omitempty"`
-	MongoHost        string  `json:"mongo_host,omitempty"`
-	Cdr              bool    `json:"cdr,omitempty"`
-	CdrFilter        *string `json:"cdr_filter,omitempty"`
-	Recordings       bool    `json:"recordings,omitempty"`
+	ElasticHost        string  `json:"elastic_host,omitempty"`
+	ElasticBulkCount   int     `json:"elastic_bulk_count,omitempty"`
+	RabbitHost         string  `json:"rabbitmq_host,omitempty"`
+	MongoHost          string  `json:"mongo_host,omitempty"`
+	Cdr                bool    `json:"cdr,omitempty"`
+	CdrFilter          *string `json:"cdr_filter,omitempty"`
+	Recordings         bool    `json:"recordings,omitempty"`
+	PgToElastic        bool    `json:"pg_to_elastic,omitempty"`
+	PgConnectionString string  `json:"pg_connection_string"`
 }
 
 func main() {
+
 	config := new(Config)
 	err := config.readFromFile()
 	if err != nil {
@@ -34,6 +38,14 @@ func main() {
 	if err != nil {
 		log.Panicln(err)
 	}
+
+	if config.PgToElastic {
+		p := pg_to_elastic.New(config.PgConnectionString, config.ElasticHost)
+		p.Start()
+		p.Close()
+		return
+	}
+
 	mongo.Connect(config.MongoHost)
 	defer mongo.Session.Close()
 
@@ -95,5 +107,16 @@ func (conf *Config) readFromEnviroment() error {
 			conf.Recordings = false
 		}
 	}
+
+	if value := os.Getenv("pg_to_elastic"); value != "" {
+		if value == "1" || value == "true" {
+			conf.PgToElastic = true
+		}
+	}
+
+	if value := os.Getenv("pg_connection_string"); value != "" {
+		conf.PgConnectionString = value
+	}
+
 	return nil
 }

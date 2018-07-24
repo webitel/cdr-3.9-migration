@@ -45,19 +45,19 @@ func New(pgConnectionString, elasticHost string) *PgToElastic {
 	return c
 }
 
-func (p *PgToElastic) Start() {
-	var idA, idB int
-	fmt.Println("Input start leg A Id: ")
-	_, err := fmt.Scanf("%d", &idA)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	fmt.Println("Input start leg B Id: ")
-	_, err = fmt.Scanf("%d", &idB)
-	if err != nil {
-		panic(err.Error())
-	}
+func (p *PgToElastic) Start(idA, idB int) {
+	//var idA, idB int
+	//fmt.Println("Input start leg A Id: ")
+	//_, err := fmt.Scanf("%d", &idA)
+	//if err != nil {
+	//	panic(err.Error())
+	//}
+	//
+	//fmt.Println("Input start leg B Id: ")
+	//_, err = fmt.Scanf("%d", &idB)
+	//if err != nil {
+	//	panic(err.Error())
+	//}
 
 	fmt.Printf("Start export to elastic leg A start id: %d\n", idA)
 	p.moveLeg("a", idA)

@@ -5,6 +5,8 @@
     "rabbitmq_host": "amqp://webitel:secret@10.10.10.200:5672?heartbeat=0",
     "recordings": true,
     "pg_to_elastic": true,
+    "pg_to_elastic_leg_a_start_id": 0,
+    "pg_to_elastic_leg_b_start_id": 0,
     "pg_connection_string": "user=webitel password=webitel dbname=webitel host=postgres sslmode=disable application_name=Migration.v1",
     "cdr": true
 }

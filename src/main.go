@@ -16,15 +16,17 @@ import (
 )
 
 type Config struct {
-	ElasticHost        string  `json:"elastic_host,omitempty"`
-	ElasticBulkCount   int     `json:"elastic_bulk_count,omitempty"`
-	RabbitHost         string  `json:"rabbitmq_host,omitempty"`
-	MongoHost          string  `json:"mongo_host,omitempty"`
-	Cdr                bool    `json:"cdr,omitempty"`
-	CdrFilter          *string `json:"cdr_filter,omitempty"`
-	Recordings         bool    `json:"recordings,omitempty"`
-	PgToElastic        bool    `json:"pg_to_elastic,omitempty"`
-	PgConnectionString string  `json:"pg_connection_string"`
+	ElasticHost            string  `json:"elastic_host,omitempty"`
+	ElasticBulkCount       int     `json:"elastic_bulk_count,omitempty"`
+	RabbitHost             string  `json:"rabbitmq_host,omitempty"`
+	MongoHost              string  `json:"mongo_host,omitempty"`
+	Cdr                    bool    `json:"cdr,omitempty"`
+	CdrFilter              *string `json:"cdr_filter,omitempty"`
+	Recordings             bool    `json:"recordings,omitempty"`
+	PgToElastic            bool    `json:"pg_to_elastic,omitempty"`
+	PgConnectionString     string  `json:"pg_connection_string"`
+	PgToElasticLegAStartId int     `json:"pg_to_elastic_leg_a_start_id"`
+	PgToElasticLegBStartId int     `json:"pg_to_elastic_leg_b_start_id"`
 }
 
 func main() {
@@ -41,7 +43,7 @@ func main() {
 
 	if config.PgToElastic {
 		p := pg_to_elastic.New(config.PgConnectionString, config.ElasticHost)
-		p.Start()
+		p.Start(config.PgToElasticLegAStartId, config.PgToElasticLegBStartId)
 		p.Close()
 		return
 	}
@@ -116,6 +118,21 @@ func (conf *Config) readFromEnviroment() error {
 
 	if value := os.Getenv("pg_connection_string"); value != "" {
 		conf.PgConnectionString = value
+	}
+
+	if value := os.Getenv("pg_to_elastic_leg_a_start_id"); value != "" {
+		id, err := strconv.Atoi(value)
+		if err != nil {
+			panic(err.Error())
+		}
+		conf.PgToElasticLegAStartId = id
+	}
+	if value := os.Getenv("pg_to_elastic_leg_b_start_id"); value != "" {
+		id, err := strconv.Atoi(value)
+		if err != nil {
+			panic(err.Error())
+		}
+		conf.PgToElasticLegBStartId = id
 	}
 
 	return nil

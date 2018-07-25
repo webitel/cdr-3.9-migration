@@ -113,6 +113,8 @@ func (conf *Config) readFromEnviroment() error {
 	if value := os.Getenv("pg_to_elastic"); value != "" {
 		if value == "1" || value == "true" {
 			conf.PgToElastic = true
+		} else {
+			conf.PgToElastic = false
 		}
 	}
 
